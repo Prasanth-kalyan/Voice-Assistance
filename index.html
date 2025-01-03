@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Input Web App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #voiceInputText, 
+        #responseText {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        #topicInput {
+            margin-top: 20px;
+        }
+
+        #topicInput label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        #topicInput input {
+            padding: 10px;
+            font-size: 14px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            width: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #topicInput input:focus {
+            outline: none;
+            border-color: #45a049;
+        }
+
+        #responseText {
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Voice Input Application</h1>
+
+    <button id="startBtn">Start Voice Input</button>
+    <div id="voiceInputText"></div>
+    <div id="topicInput">
+        <label for="topic">Enter Topic: </label>
+        <input type="text" id="topic" placeholder="Enter topic">
+    </div>
+    <div id="responseText"></div>
+
+    <script>
+        const startBtn = document.getElementById("startBtn");
+        const voiceInputText = document.getElementById("voiceInputText");
+        const topicInput = document.getElementById("topic");
+        const responseText = document.getElementById("responseText");
+
+        const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+
+        startBtn.onclick = function() {
+            recognition.start();
+        };
+
+        recognition.onresult = function(event) {
+            const voiceText = event.results[0][0].transcript;
+            voiceInputText.innerHTML = `<b>Voice Input: </b>${voiceText}`;
+
+            const topic = topicInput.value;
+            fetch("/processVoice", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        voiceText,
+                        topic
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    responseText.innerHTML = `<b>Response: </b>${data.response}`;
+                    speak(data.response); // Text-to-speech output
+                })
+                .catch(error => console.error("Error:", error));
+        };
+
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+
+</html>
